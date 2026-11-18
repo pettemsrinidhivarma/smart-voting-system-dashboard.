@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Voting System — Cats vs. Dogs</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">🗳️</div>
+        <div>
+          <p class="brand-title">Smart Voting System</p>
+          <p class="brand-sub">Real-time IoT voting dashboard</p>
+        </div>
+      </div>
+      <div class="status-pills">
+        <span class="pill pill-demo"><span class="dot amber"></span>DEMO MODE</span>
+        <span class="pill pill-warn" id="hw-status-pill"><span class="dot gray"></span>Devices not verified</span>
+        <span class="pill pill-time" id="clock">—</span>
+        <button class="btn-export" id="exportCsvBtn" title="Download vote results as CSV">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-badges">
+          <span class="badge"><span class="dot blue"></span>College poll · demo</span>
+          <span class="badge badge-muted">No hardware connected</span>
+        </div>
+        <h1>Cats <span class="vs">vs.</span> Dogs</h1>
+        <p class="hero-desc">Two buttons. One winner. Cast your demo vote and watch the scoreboard move.</p>
+        <div class="vote-actions">
+          <button class="vote-btn cat-btn" id="voteCatsBtn">🐱 Vote Cats</button>
+          <button class="vote-btn dog-btn" id="voteDogsBtn">🐶 Vote Dogs</button>
+          <button class="vote-btn reset-btn" id="resetBtn">Reset</button>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="versus-card">
+          <div class="pet-side cat-side">
+            <span class="pet-emoji">🐱</span>
+            <span class="pet-name">Team Cats</span>
+          </div>
+          <div class="vs-circle">VS</div>
+          <div class="pet-side dog-side">
+            <span class="pet-emoji">🐶</span>
+            <span class="pet-name">Team Dogs</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Vote Simulator Controls -->
+    <section class="card simulator-bar" aria-label="Live vote simulation controls">
+      <div class="sim-info">
+        <div class="sim-header">
+          <h2>Live vote simulator</h2>
+          <span class="sim-badge paused" id="simStateBadge"><span class="dot"></span>Paused</span>
+        </div>
+        <p>Watch sample votes arrive and the results change in real time.</p>
+      </div>
+      <div class="sim-controls" aria-label="Vote simulation speed">
+        <button class="btn-sim primary" id="toggleSimBtn">Start Simulator</button>
+        <select id="simSpeed" aria-label="Simulation speed">
+          <option value="2500">1x Speed (2.5s)</option>
+          <option value="1200">2x Speed (1.2s)</option>
+          <option value="500">5x Speed (0.5s)</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- KPI Totals -->
+    <section class="kpi-grid" aria-label="Voting totals">
+      <article class="card kpi-card">
+        <p class="kpi-label">Total votes</p>
+        <p class="kpi-value" id="totalVotes">120</p>
+        <p class="kpi-foot">All recorded votes</p>
+      </article>
+      <article class="card kpi-card">
+        <p class="kpi-label">Cat votes</p>
+        <p class="kpi-value cat-text" id="catVotes">72</p>
+        <p class="kpi-foot"><span class="dot cat-dot"></span><span id="catPctText">60%</span> of total votes</p>
+      </article>
+      <article class="card kpi-card">
+        <p class="kpi-label">Dog votes</p>
+        <p class="kpi-value dog-text" id="dogVotes">48</p>
+        <p class="kpi-foot"><span class="dot dog-dot"></span><span id="dogPctText">40%</span> of total votes</p>
+      </article>
+      <article class="card kpi-card">
+        <p class="kpi-label">Current leader</p>
+        <p class="kpi-value" id="leaderName">Cats</p>
+        <p class="kpi-foot" id="leaderLead">24 votes ahead</p>
+      </article>
+    </section>
+
+    <!-- Charts Row -->
+    <section class="two-col">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Vote results</h2>
+            <p>Current totals by candidate</p>
+          </div>
+          <span class="tag">Updates with demo votes</span>
+        </div>
+
+        <div class="progress-group">
+          <div class="progress-row">
+            <div class="progress-meta">
+              <span class="cand-label">Cats</span>
+              <span id="catBarLabel">72 · 60%</span>
+            </div>
+            <div class="progress-track" role="progressbar" aria-label="Cats vote share" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60" id="catProgressWrap">
+              <div class="progress-fill cat-fill" id="catBarFill" style="width: 60%"></div>
+            </div>
+          </div>
+
+          <div class="progress-row">
+            <div class="progress-meta">
+              <span class="cand-label">Dogs</span>
+              <span id="dogBarLabel">48 · 40%</span>
+            </div>
+            <div class="progress-track" role="progressbar" aria-label="Dogs vote share" aria-valuemin="0" aria-valuemax="100" aria-valuenow="40" id="dogProgressWrap">
+              <div class="progress-fill dog-fill" id="dogBarFill" style="width: 40%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Voting split</h2>
+            <p>Share of all votes</p>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut" id="donutChart" style="--cat-deg: 216deg;">
+            <div class="donut-hole">
+              <span class="donut-total" id="donutTotal">120</span>
+              <span class="donut-sub">total votes</span>
+            </div>
+          </div>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <span><span class="dot cat-dot"></span>Cats</span>
+              <strong id="legendCatPct">60%</strong>
+            </div>
+            <div class="legend-item">
+              <span><span class="dot dog-dot"></span>Dogs</span>
+              <strong id="legendDogPct">40%</strong>
+            </div>
+            <p class="lead-callout" id="splitSummary">Cats are in the lead by 24 votes</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- System Health & Recent Activity -->
+    <section class="two-col">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>System health</h2>
+            <p>Device connection checks</p>
+          </div>
+          <span class="tag">Awaiting connection</span>
+        </div>
+        <div class="device-list">
+          <div class="device-item">
+            <div>
+              <p class="dev-name">ESP32 board</p>
+              <p class="dev-desc">Button controller</p>
+            </div>
+            <span class="dev-status"><span class="dot gray"></span>Not verified</span>
+          </div>
+          <div class="device-item">
+            <div>
+              <p class="dev-name">MQTT broker</p>
+              <p class="dev-desc">Message transport</p>
+            </div>
+            <span class="dev-status"><span class="dot gray"></span>Not verified</span>
+          </div>
+          <div class="device-item">
+            <div>
+              <p class="dev-name">Minikube app</p>
+              <p class="dev-desc">Voting service</p>
+            </div>
+            <span class="dev-status"><span class="dot gray"></span>Not verified</span>
+          </div>
+          <div class="device-item">
+            <div>
+              <p class="dev-name">OLED display</p>
+              <p class="dev-desc">Local vote counter</p>
+            </div>
+            <span class="dev-status"><span class="dot gray"></span>Not verified</span>
+          </div>
+        </div>
+        <p class="muted-note">No hardware connection is configured. Device states are unverified.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Recent voting activity</h2>
+            <p>Sample and simulated events · latest first</p>
+          </div>
+          <span class="tag" id="activityCountTag">Last 4 votes</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Vote</th>
+                <th>Candidate</th>
+                <th>Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="activityBody">
+              <!-- Populated by script.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture Flow -->
+    <section class="card flow-section">
+      <div class="card-head">
+        <div>
+          <h2>How a vote travels</h2>
+          <p>From a physical button to the live results</p>
+        </div>
+        <span class="tag">Illustrative system flow</span>
+      </div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <span class="step-num">1</span>
+          <div>
+            <strong>Buttons</strong>
+            <p>Choose Cats or Dogs</p>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <span class="step-num">2</span>
+          <div>
+            <strong>ESP32</strong>
+            <p>Reads the button press</p>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <span class="step-num">3</span>
+          <div>
+            <strong>MQTT</strong>
+            <p>Sends a vote message</p>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <span class="step-num">4</span>
+          <div>
+            <strong>Minikube app</strong>
+            <p>Counts each vote once</p>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <span class="step-num">5</span>
+          <div>
+            <strong>OLED + dashboard</strong>
+            <p>Shows the latest totals</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
